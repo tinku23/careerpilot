@@ -12,3 +12,4 @@ plotly==5.21.0
 streamlit-agraph==0.0.44
 streamlit-mermaid==0.1.1
 python-dotenv==1.0.1
+
