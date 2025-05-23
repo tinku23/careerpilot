@@ -1,46 +1,131 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
-
-llm = ChatGoogleGenerativeAI(model="models/gemini-pro")
+from langchain_core.messages import HumanMessage
 import pycountry
+import os
+from gtts import gTTS
+import base64
+from io import BytesIO
+from fpdf import FPDF
 
+# Page config
+st.set_page_config(
+    page_title="Compass : AI Career Counselor",
+    page_icon="🧭",
+    layout="centered",
+    initial_sidebar_state="expanded",
+)
+
+st.title('🧭 Compass : AI Career Counselor')
+st.sidebar.title("Compass : AI Career Counselor")
+
+# Sidebar: Input API key
+openai_api_key = st.sidebar.text_input(
+    '🔑 Input Your Google Studio Gemini API Key. You can create one [here](https://aistudio.google.com/app/apikey)',
+    type="password"
+)
+st.sidebar.divider()
+
+# Sidebar: Intro text
+st.sidebar.markdown("""
+👋 Welcome to **Compass: AI Career Counselor** — a smart assistant built using **LangChain**, **Google Gemini**, and **Streamlit**.
+
+🧠 It provides structured, personalized guidance to help you make confident career choices based on your goals and background.
+""")
+
+# Get list of countries
 country_names = [country.name for country in pycountry.countries]
 
-st.set_page_config(
-   page_title="Compass : AI Career Counselor",
-   page_icon="🧭",
-   layout="centered",
-   initial_sidebar_state="expanded",
-)
-st.title(' 🧭 Compass : AI Career Counselor')
-st.sidebar.title("Compass : AI Career Counselor")
-openai_api_key = st.sidebar.text_input('Input Your Google Studio Gemini API Key. If you do not have you can create for free\
-                                       from here https://aistudio.google.com/app/apikey')
-st.sidebar.divider()  # 👈 Draws a horizontal rule
+# Generate response function
+def generate_response(prompt):
+    try:
+        os.environ["GOOGLE_API_KEY"] = openai_api_key
+        llm = ChatGoogleGenerativeAI(
+            model="models/chat-bison-001",  # Gemini Pro model
+            temperature=0.7,
+        )
+        response = llm.invoke(HumanMessage(content=prompt))
+        return response.content
+    except Exception as e:
+        st.error(f"⚠️ Failed to generate response: {e}")
+        return None
 
+# Convert text to downloadable PDF
+def create_pdf(text):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_font("Arial", size=12)
+    for line in text.split('\n'):
+        pdf.multi_cell(0, 10, line)
+    buffer = BytesIO()
+    pdf.output(buffer)
+    buffer.seek(0)
+    return buffer
 
-st.sidebar.markdown("👋 Welcome to **Compass: AI Career Counselor** — a smart assistant built using **LangChain**, **Google Gemini**, and **Streamlit**. \n\n"
-                    "🧠 It provides structured, personalized guidance to help you make confident career choices based on your goals and background.")
+# Convert text to speech
+def generate_audio(text, language_code='en'):
+    try:
+        tts = gTTS(text=text, lang=language_code)
+        audio_bytes = BytesIO()
+        tts.write_to_fp(audio_bytes)
+        audio_bytes.seek(0)
+        return audio_bytes
+    except Exception as e:
+        st.error(f"🔊 Failed to generate audio: {e}")
+        return None
 
+# Language code mapping for TTS
+lang_codes = {
+    "English": "en",
+    "Hindi": "hi",
+    "Spanish": "es",
+    "Chinese": "zh-CN",
+    "French": "fr"
+}
 
-
-def generate_response(input_text):
-  llm = GoogleGenerativeAI(model="gemini-1.0-pro-latest", google_api_key=openai_api_key)
-  st.info(llm(input_text))
-
+# Main form
 with st.form('Form1'):
-  getText=text = st.text_area('`1` Tell us what you want to become')
-  getEconmics=st.selectbox('`2` To better assist let us know if You are economically', ['Poor', 'Middle','Rich'], key=1)
-  getClass=slider1=st.slider(label='`3` Which class/standard you are studying in.', min_value=0, max_value=30, key=2)
-  getNationality=st.selectbox('`4` Select your nationality(So that you get your region specific learning path)', country_names, key=3)
-  getLanguage=st.selectbox('`4` Select your language(So that you get your language specific learning path)', ['english', 'Hindi','spanish','chinese','french  '], key=4)
-  getAge=st.slider(label='`5` Select your age(So that you get your age specific learning path)', min_value=0, max_value=100, key=5)
-  getsubmittedForm = st.form_submit_button('Submit 1')
-  
-  createPrompt=f"You are expert in career counseling. Give a structured career map in {getLanguage} language. For every step give online link or resources originating from {getNationality} which can help the student. \
-    I am economically {getEconmics} person from {getNationality}. I am {getAge} old and currently studing in class {getClass}. I want to become a {getText} in {getNationality}"
-  
-  if not openai_api_key:
-      st.warning('To get answer please enter your Gemini API Key in the sidebar OR create for free  https://aistudio.google.com/app/apikey', icon='⚠')
-  if getsubmittedForm and openai_api_key:
-    generate_response(createPrompt)
+    career_goal = st.text_area('`1` Tell us what you want to become')
+    economic_status = st.selectbox('`2` To better assist, let us know your economic background', ['Poor', 'Middle', 'Rich'], key=1)
+    current_class = st.slider(label='`3` What class/standard are you studying in?', min_value=0, max_value=30, key=2)
+    nationality = st.selectbox('`4` Select your nationality (for region-specific guidance)', country_names, key=3)
+    language = st.selectbox('`5` Select your language (for personalized content)', list(lang_codes.keys()), key=4)
+    age = st.slider(label='`6` Select your age (for age-appropriate suggestions)', min_value=0, max_value=100, key=5)
+    uploaded_file = st.file_uploader("📄 Optionally upload your report card/resume (PDF/DOC)", type=["pdf", "doc", "docx"])
+    submitted = st.form_submit_button('Submit')
+
+    if submitted:
+        if not openai_api_key:
+            st.warning('⚠ Please enter your Gemini API Key in the sidebar.', icon='⚠')
+        elif not career_goal.strip():
+            st.warning("⚠ Please enter your career goal.")
+        else:
+            file_note = f"A report/resume file is uploaded." if uploaded_file else "No additional file provided."
+            prompt = (
+                f"You are an expert in career counseling. Give a structured career map in {language} language. "
+                f"For every step, give online links or resources originating from {nationality} to help the student. "
+                f"I am an economically {economic_status} person from {nationality}. I am {age} years old and currently studying in class {current_class}. "
+                f"I want to become a {career_goal} in {nationality}. "
+                f"{file_note}"
+            )
+            response_text = generate_response(prompt)
+
+            if response_text:
+                st.success("🎯 Here's your personalized career path:")
+                st.markdown(response_text)
+
+                # PDF Download
+                pdf_file = create_pdf(response_text)
+                st.download_button(
+                    label="📄 Download Career Roadmap as PDF",
+                    data=pdf_file,
+                    file_name="career_roadmap.pdf",
+                    mime="application/pdf"
+                )
+
+                # Text-to-Speech
+                lang_code = lang_codes[language]
+                audio_data = generate_audio(response_text, language_code=lang_code)
+                if audio_data:
+                    st.audio(audio_data, format='audio/mp3', start_time=0)
