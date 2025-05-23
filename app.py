@@ -40,14 +40,17 @@ country_names = [country.name for country in pycountry.countries]
 def generate_response(prompt):
     try:
         os.environ["GOOGLE_API_KEY"] = openai_api_key
-        llm = chatgooglegenerativeai(
-            model="models/chat-bison-001",  # Gemini Pro model
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash", # Updated model name
             temperature=0.7,
         )
-        response = llm.invoke(HumanMessage(content=prompt))
+        # Fixed method to properly handle message format
+        messages = [HumanMessage(content=prompt)]
+        response = llm.invoke(messages)
         return response.content
     except Exception as e:
-        st.error(f"⚠️ Failed to generate response: {e}")
+        st.error(f"⚠️ Failed to generate response: {str(e)}")
+        st.info("Make sure your API key is correct and has access to the Gemini models.")
         return None
 
 # Convert text to downloadable PDF
@@ -129,7 +132,3 @@ with st.form('Form1'):
                 audio_data = generate_audio(response_text, language_code=lang_code)
                 if audio_data:
                     st.audio(audio_data, format='audio/mp3', start_time=0)
-
-
-   
-   
