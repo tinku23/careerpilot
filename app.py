@@ -40,7 +40,7 @@ country_names = [country.name for country in pycountry.countries]
 def generate_response(prompt):
     try:
         os.environ["GOOGLE_API_KEY"] = openai_api_key
-        llm = ChatGoogleGenerativeAI(
+        llm = chatgooglegenerativeai(
             model="models/chat-bison-001",  # Gemini Pro model
             temperature=0.7,
         )
@@ -129,3 +129,7 @@ with st.form('Form1'):
                 audio_data = generate_audio(response_text, language_code=lang_code)
                 if audio_data:
                     st.audio(audio_data, format='audio/mp3', start_time=0)
+
+
+   
+   
