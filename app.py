@@ -25,17 +25,15 @@ openai_api_key = st.sidebar.text_input(
 )
 st.sidebar.divider()
 
-# Sidebar: Intro text
 st.sidebar.markdown("""
 👋 Welcome to **Compass: AI Career Counselor** — a smart assistant built using **LangChain**, **Google Gemini**, and **Streamlit**.
-
 🧠 It provides structured, personalized guidance to help you make confident career choices based on your goals and background.
 """)
 
 # Get list of countries
 country_names = [country.name for country in pycountry.countries]
 
-# Generate response function
+# Response generation
 def generate_response(prompt):
     try:
         os.environ["GOOGLE_API_KEY"] = openai_api_key
@@ -51,7 +49,7 @@ def generate_response(prompt):
         st.info("Make sure your API key is correct and has access to the Gemini models.")
         return None
 
-# Corrected: Convert text to downloadable PDF
+# PDF conversion
 def create_pdf(text):
     pdf = FPDF()
     pdf.add_page()
@@ -62,7 +60,7 @@ def create_pdf(text):
     pdf_output = pdf.output(dest='S').encode('latin1')
     return BytesIO(pdf_output)
 
-# Convert text to speech
+# TTS
 def generate_audio(text, language_code='en'):
     try:
         tts = gTTS(text=text, lang=language_code)
@@ -74,7 +72,7 @@ def generate_audio(text, language_code='en'):
         st.error(f"🔊 Failed to generate audio: {e}")
         return None
 
-# Language code mapping for TTS
+# Language mapping
 lang_codes = {
     "English": "en",
     "Hindi": "hi",
@@ -83,7 +81,8 @@ lang_codes = {
     "French": "fr"
 }
 
-# Main form
+# Input form
+response_text = None  # So we can use it outside the form too
 with st.form('Form1'):
     career_goal = st.text_area('`1` Tell us what you want to become')
     economic_status = st.selectbox('`2` To better assist, let us know your economic background', ['Poor', 'Middle', 'Rich'], key=1)
@@ -110,21 +109,22 @@ with st.form('Form1'):
             )
             response_text = generate_response(prompt)
 
-            if response_text:
-                st.success("🎯 Here's your personalized career path:")
-                st.markdown(response_text)
+# Handle response outside the form
+if response_text:
+    st.success("🎯 Here's your personalized career path:")
+    st.markdown(response_text)
 
-                # PDF Download
-                pdf_file = create_pdf(response_text)
-                st.download_button(
-                    label="📄 Download Career Roadmap as PDF",
-                    data=pdf_file,
-                    file_name="career_roadmap.pdf",
-                    mime="application/pdf"
-                )
+    # PDF Download
+    pdf_file = create_pdf(response_text)
+    st.download_button(
+        label="📄 Download Career Roadmap as PDF",
+        data=pdf_file,
+        file_name="career_roadmap.pdf",
+        mime="application/pdf"
+    )
 
-                # Text-to-Speech
-                lang_code = lang_codes[language]
-                audio_data = generate_audio(response_text, language_code=lang_code)
-                if audio_data:
-                    st.audio(audio_data, format='audio/mp3', start_time=0)
+    # TTS
+    lang_code = lang_codes[language]
+    audio_data = generate_audio(response_text, language_code=lang_code)
+    if audio_data:
+        st.audio(audio_data, format='audio/mp3', start_time=0)
