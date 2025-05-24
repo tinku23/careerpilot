@@ -1,14 +1,16 @@
 streamlit==1.33.0
 langchain-google-genai==1.0.1
-google-generativeai==0.3.2
+google-generativeai>=0.3.2
+langchain>=0.1.17
 pycountry
 PyMuPDF==1.23.7
 pdfplumber==0.10.2
 fpdf==1.7.2
-# streamlit-pdf-viewer==0.0.2  # Optional: comment out for testing
+streamlit-pdf-viewer==0.0.2
 gTTS==2.3.2
-# pygame==2.5.2  # Comment out to avoid system dependency issues
+pygame==2.5.2
 plotly==5.21.0
 streamlit-agraph==0.0.44
 streamlit-mermaid==0.1.1
 python-dotenv==1.0.1
+protobuf<4.0.0  # Prevents Google Generative AI errors
