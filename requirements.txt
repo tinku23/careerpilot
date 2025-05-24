@@ -8,7 +8,7 @@ pdfplumber==0.10.2
 fpdf==1.7.2
 gTTS==2.3.2
 plotly==5.21.0
-streamlit-agraph==0.0.44
+streamlit-agraph==0.0.45
 streamlit-mermaid==0.1.1
 python-dotenv==1.0.1
 protobuf<4.0.0
