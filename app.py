@@ -4,7 +4,6 @@ from langchain_core.messages import HumanMessage
 import pycountry
 import os
 from gtts import gTTS
-import base64
 from io import BytesIO
 from fpdf import FPDF
 
@@ -41,10 +40,9 @@ def generate_response(prompt):
     try:
         os.environ["GOOGLE_API_KEY"] = openai_api_key
         llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash", # Updated model name
+            model="gemini-2.0-flash",
             temperature=0.7,
         )
-        # Fixed method to properly handle message format
         messages = [HumanMessage(content=prompt)]
         response = llm.invoke(messages)
         return response.content
@@ -53,7 +51,7 @@ def generate_response(prompt):
         st.info("Make sure your API key is correct and has access to the Gemini models.")
         return None
 
-# Convert text to downloadable PDF
+# Corrected: Convert text to downloadable PDF
 def create_pdf(text):
     pdf = FPDF()
     pdf.add_page()
@@ -61,10 +59,8 @@ def create_pdf(text):
     pdf.set_font("Arial", size=12)
     for line in text.split('\n'):
         pdf.multi_cell(0, 10, line)
-    buffer = BytesIO()
-    pdf.output(buffer)
-    buffer.seek(0)
-    return buffer
+    pdf_output = pdf.output(dest='S').encode('latin1')
+    return BytesIO(pdf_output)
 
 # Convert text to speech
 def generate_audio(text, language_code='en'):
