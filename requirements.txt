@@ -6,11 +6,9 @@ pycountry
 PyMuPDF==1.23.7
 pdfplumber==0.10.2
 fpdf==1.7.2
-streamlit-pdf-viewer==0.0.2
 gTTS==2.3.2
-pygame==2.5.2
 plotly==5.21.0
 streamlit-agraph==0.0.44
 streamlit-mermaid==0.1.1
 python-dotenv==1.0.1
-protobuf<4.0.0  # Prevents Google Generative AI errors
+protobuf<4.0.0
