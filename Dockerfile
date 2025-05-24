@@ -13,9 +13,11 @@ COPY requirements.txt .
 # Ensure you install build essentials if any packages require compilation (e.g., PyMuPDF)
 # and poppler-utils for pdfplumber if it's not pre-installed in the base image.
 RUN apt-get update && apt-get install -y \
+    # If you ever connect to PostgreSQL (good general dev dependency)
     build-essential \
-    libpq-dev \ # If you ever connect to PostgreSQL (good general dev dependency)
-    poppler-utils \ # Essential for pdfplumber
+    libpq-dev \
+    # Essential for pdfplumber
+    poppler-utils \
     # Add any other system dependencies here if needed
     && rm -rf /var/lib/apt/lists/*
 
